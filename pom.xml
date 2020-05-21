@@ -12,6 +12,7 @@
         <module>net-storage-server</module>
         <module>net-storage-client</module>
         <module>net-storage-common</module>
+        <module>net-storage-srv</module>
     </modules>
 
     <properties>

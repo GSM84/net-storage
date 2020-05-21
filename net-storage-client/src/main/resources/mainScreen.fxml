@@ -5,8 +5,7 @@
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
 
-<GridPane gridLinesVisible="true" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8"
-fx:controller="Controller">
+<GridPane gridLinesVisible="true" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -15,16 +14,26 @@ fx:controller="Controller">
     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
   </rowConstraints>
    <children>
-      <VBox prefHeight="200.0" prefWidth="100.0">
+      <VBox fx:id="clientBox" prefHeight="200.0" prefWidth="100.0" visible="false">
          <children>
             <ListView fx:id="clientFiles" prefHeight="365.0" prefWidth="300.0" />
-            <Button fx:id="uploadFIle" mnemonicParsing="false" prefHeight="35.0" prefWidth="299.0" text="Upload file" onAction="#uploadFile"/>
+            <Button fx:id="uploadFIle" maxWidth="Infinity" mnemonicParsing="false" onAction="#uploadFile" prefHeight="35.0" prefWidth="299.0" text="Upload file" />
          </children>
       </VBox>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1">
+       <VBox fx:id="authBox" prefHeight="200.0" prefWidth="100.0" visible="true">
+          <children>
+            <Label text="Login:" />
+            <TextField fx:id="loginField"/>
+            <Label text="Password" />
+            <PasswordField  fx:id="passField" />
+            <Separator prefWidth="200.0"/>
+              <Button fx:id="sendCredential" maxWidth="Infinity" mnemonicParsing="false" onAction="#authUser" prefHeight="35.0" prefWidth="299.0" text="Sing In" />
+          </children>
+       </VBox>
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" fx:id="serverBox" disable="true">
          <children>
             <ListView fx:id="serverFiles" prefHeight="365.0" prefWidth="300.0" />
-            <Button mnemonicParsing="false" prefHeight="35.0" prefWidth="299.0" text="Download file" />
+            <Button maxWidth="Infinity" mnemonicParsing="false" prefHeight="35.0" prefWidth="299.0" text="Download file" />
          </children>
       </VBox>
    </children>
