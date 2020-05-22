@@ -11,10 +11,6 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
     private String              userLogin;
     private String              userPass;
 
-    private static final byte   AUTH              = 14;
-    private static final int    CREDENTIAL_LENGTH = 4;
-    private static final String CHAR_SET          = "UTF-8";
-
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         ByteBuf buf = ((ByteBuf) msg);
@@ -22,14 +18,14 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
         while (buf.readableBytes() > 0) {
             if (currentState == HandelerState.WAITING_FOR_AUTH){
                 byte readed = buf.readByte();
-                if (readed == AUTH) {
+                if (readed == Dictionary.AUTH) {
                     System.out.println("STATE: Start processing authorization");
                     currentState = HandelerState.GET_CREDENTIAL_LENGTH;
                 } else {
                     System.out.println("ERROR: Invalid first byte - " + readed);
                 }
             } else if (currentState == HandelerState.GET_CREDENTIAL_LENGTH){
-                if (buf.readableBytes() >= CREDENTIAL_LENGTH) {
+                if (buf.readableBytes() >= Dictionary.INT_LENGTH) {
                     System.out.println("STATE: Get credential length");
 
                     credentialLength = buf.readInt();
@@ -47,12 +43,12 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
                     buf.readBytes(credentialByte);
 
                     if (userLogin == null){
-                        userLogin = new String(credentialByte, CHAR_SET);
+                        userLogin = new String(credentialByte, Dictionary.CHAR_SET);
                         System.out.println("STATE: Login recived - " + userLogin);
                         currentState = HandelerState.GET_CREDENTIAL_LENGTH;
                     } else {
                         System.out.println("STATE: Password received.");
-                        userPass  = new String(credentialByte, CHAR_SET);
+                        userPass  = new String(credentialByte, Dictionary.CHAR_SET);
 
                         if (AuthService.authorize(userLogin, userPass)){
                             // добавить блок обработки запросов

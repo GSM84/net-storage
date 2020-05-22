@@ -8,16 +8,14 @@ import io.netty.channel.ChannelPromise;
 public class OutgoingHandler extends ChannelOutboundHandlerAdapter {
     @Override
     public void write(ChannelHandlerContext ctx, Object msg, ChannelPromise promise) {
-
-        byte[] byteArr = (byte[]) msg;
-        ByteBuf buffer = ctx.alloc().buffer(byteArr.length);
-        buffer.writeBytes(buffer);
+        ByteBuf buf = (ByteBuf) msg;
         System.out.println("send message out");
-        ctx.writeAndFlush(buffer);
+        ctx.writeAndFlush(buf);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        super.exceptionCaught(ctx, cause);
+        cause.printStackTrace();
+        ctx.close();
     }
 }
