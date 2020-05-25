@@ -10,16 +10,19 @@ import java.io.FileOutputStream;
 import java.nio.file.Paths;
 
 public class IncomeHandler extends ChannelInboundHandlerAdapter {
-    private static final String SERVER_BASE_FOLDER  = "Storage\\1\\";
-
     private HandelerState        currentState       = HandelerState.IDLE;
     private int                  nextLength;
     private long                 fileLength;
     private long                 receivedFileLength = 0;
+    private int                  userId;
     private BufferedOutputStream out;
 
-    private String stringName;
+    private String      stringName;
     private FileService fileService = new FileService();
+
+    public IncomeHandler(int _userId){
+        this.userId = _userId;
+    }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -34,7 +37,7 @@ public class IncomeHandler extends ChannelInboundHandlerAdapter {
                     System.out.println("STATE: Start file receiving");
 
                 } else if (readed == Dictionary.FILE_LIST) {
-                    fileService.getFileList(Paths.get(SERVER_BASE_FOLDER), ctx);
+                    fileService.getFileList(Paths.get(Dictionary.SERVER_BASE_FOLDER, String.valueOf(userId)), ctx);
                     currentState = HandelerState.IDLE;
 
                 } else if (readed == Dictionary.SEND_FILE) {
@@ -45,8 +48,8 @@ public class IncomeHandler extends ChannelInboundHandlerAdapter {
                     if (buf.readableBytes() >= fileService.getIncomeFileNameLength()){
                         byte[] fileName = new byte[fileService.getIncomeFileNameLength()];
                         buf.readBytes(fileName);
-                        stringName = new String(fileName, Dictionary.CHAR_SET);
-                        fileService.getFile(stringName, ctx);
+                        fileService.setIncomeFileName(new String(fileName, Dictionary.CHAR_SET));
+                        fileService.getFile(userId, ctx);
 
                         currentState = HandelerState.IDLE;
                     }
@@ -68,7 +71,7 @@ public class IncomeHandler extends ChannelInboundHandlerAdapter {
                     buf.readBytes(fileName);
                     stringName = new String(fileName, Dictionary.CHAR_SET);
                     System.out.println("STATE: Filename received - " + stringName);
-                    out = new BufferedOutputStream(new FileOutputStream(SERVER_BASE_FOLDER + stringName));
+                    out = new BufferedOutputStream(new FileOutputStream(Paths.get(Dictionary.SERVER_BASE_FOLDER, String.valueOf(userId), stringName).toFile()));
                     currentState = HandelerState.GET_FILE_LENGTH;
 
                 }
@@ -88,7 +91,7 @@ public class IncomeHandler extends ChannelInboundHandlerAdapter {
                         System.out.println("File received return name");
                         out.close();
 
-                        fileService.getFileList(Paths.get(SERVER_BASE_FOLDER), ctx);
+                        fileService.getFileList(Paths.get(Dictionary.SERVER_BASE_FOLDER, String.valueOf(userId)), ctx);
                         break;
                     }
                 }

@@ -10,6 +10,7 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
     private int                 credentialLength;
     private String              userLogin;
     private String              userPass;
+    private AuthService         authService       = new AuthService();
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -50,10 +51,11 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
                         System.out.println("STATE: Password received.");
                         userPass  = new String(credentialByte, Dictionary.CHAR_SET);
 
-                        if (AuthService.authorize(userLogin, userPass)){
+                        if (authService.authorize(userLogin, userPass)){
                             // добавить блок обработки запросов
                             System.out.println("STATE: Authorized.");
                             currentState = HandelerState.AUHORIZED;
+                            ctx.pipeline().addLast(new IncomeHandler(authService.getUserId()));
                         } else {
                             System.err.println("Incorrect password for user - " + userLogin);
                             currentState = HandelerState.WAITING_FOR_AUTH;
@@ -75,5 +77,9 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         System.out.println(String.format("Client %s has closed connection.", userLogin));
         ctx.close();
+    }
+
+    public AuthService getAuthService() {
+        return authService;
     }
 }

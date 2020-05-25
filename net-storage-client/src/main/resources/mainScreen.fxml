@@ -33,7 +33,7 @@
       <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" fx:id="serverBox" disable="true">
          <children>
             <ListView fx:id="serverFiles" prefHeight="365.0" prefWidth="300.0" />
-            <Button maxWidth="Infinity" mnemonicParsing="false" prefHeight="35.0" prefWidth="299.0" text="Download file" />
+            <Button maxWidth="Infinity" mnemonicParsing="false" prefHeight="35.0" prefWidth="299.0" text="Download file" onAction="#getFile" />
          </children>
       </VBox>
    </children>

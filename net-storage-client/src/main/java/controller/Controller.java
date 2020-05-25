@@ -8,8 +8,10 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import sun.nio.ch.Net;
 
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ResourceBundle;
 import java.util.concurrent.CountDownLatch;
 
@@ -77,12 +79,23 @@ public class Controller implements Initializable {
             return;
         }
         String fileName = clientFiles.getSelectionModel().getSelectedItem().toString();
-        File.transferFile(fileName, 1);
+        File.transferFile(fileName);
+    }
+
+    public void getFile(ActionEvent event){
+        if (serverFiles.getSelectionModel().getSelectedItems().isEmpty()){
+            return;
+        }
+        String fileName = serverFiles.getSelectionModel().getSelectedItem().toString();
+        // send file request
+        Network.getInstance().sendFileHeader(Dictionary.GET_FILE, fileName);
     }
 
     public ListView getServerFiles() {
         return serverFiles;
     }
 
-
+    public ListView getClientFiles() {
+        return clientFiles;
+    }
 }

@@ -18,12 +18,6 @@ import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
 
 public class Network {
-    public static final byte   AUTH              = 14;
-    public static final byte   FILE_TRANSFER     = 28;
-    public static final byte   FILE_LIST         = 31;
-    public static final byte   GET_FILE          = 30;
-    private static final String CHAR_SET         = "UTF-8";
-
     private static Network ourInstance = new Network();
 
     public static Network getInstance() {
@@ -40,7 +34,7 @@ public class Network {
     }
 
     public void start(CountDownLatch countDownLatch, String _host, int _port) {
-        EventLoopGroup group = new NioEventLoopGroup();
+        EventLoopGroup group = new NioEventLoopGroup(1);
         try {
             Bootstrap clientBootstrap = new Bootstrap();
             clientBootstrap.group(group)
@@ -72,10 +66,10 @@ public class Network {
 
     public boolean authorizeUser(String _login, String _password){
         try {
-            byte[] loginByte = _login.getBytes(CHAR_SET);
-            byte[] passByte  = _password.getBytes(CHAR_SET);
+            byte[] loginByte = _login.getBytes(Dictionary.CHAR_SET);
+            byte[] passByte  = _password.getBytes(Dictionary.CHAR_SET);
             ByteBuf buff = ByteBufAllocator.DEFAULT.directBuffer(1 + 4 + loginByte.length + 4 + passByte.length);
-            buff.writeByte(AUTH);
+            buff.writeByte(Dictionary.AUTH);
             buff.writeInt(loginByte.length);
             buff.writeBytes(loginByte);
             buff.writeInt(passByte.length);
@@ -88,15 +82,13 @@ public class Network {
         return true;
     }
 
-    public void writeFileHeader(Path _filePath){
+    public void sendFileHeader(byte _signalByte, Path _filePath){
         try {
-            byte[]  nameByte   = _filePath.getFileName().toString().getBytes(CHAR_SET);
-            long    fileLength = Files.size(_filePath);
-            ByteBuf buff       = ByteBufAllocator.DEFAULT.directBuffer(1 + 4 + nameByte.length + 8);
-            buff.writeByte(FILE_TRANSFER);
+            byte[]  nameByte   = _filePath.getFileName().toString().getBytes(Dictionary.CHAR_SET);
+            ByteBuf buff       = ByteBufAllocator.DEFAULT.directBuffer(1 + 4 + nameByte.length);
+            buff.writeByte(_signalByte);
             buff.writeInt(nameByte.length);
             buff.writeBytes(nameByte);
-            buff.writeLong(fileLength);
             currentChannel.writeAndFlush(buff);
 
         } catch (IOException e) {
@@ -104,17 +96,37 @@ public class Network {
         }
     }
 
+    public void sendFileHeader(byte _signalByte, String _fileName){
+        try {
+            byte[]  nameByte   = _fileName.getBytes(Dictionary.CHAR_SET);
+            ByteBuf buff       = ByteBufAllocator.DEFAULT.directBuffer(1 + 4 + nameByte.length);
+            buff.writeByte(_signalByte);
+            buff.writeInt(nameByte.length);
+            buff.writeBytes(nameByte);
+            currentChannel.writeAndFlush(buff);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendFileLength(long _fileLength){
+        ByteBuf buff = ByteBufAllocator.DEFAULT.directBuffer(Dictionary.LONG_LENGTH);
+        buff.writeLong(_fileLength);
+        currentChannel.writeAndFlush(buff);
+    }
+
     public void getFileList(){
         ByteBuf buff       = ByteBufAllocator.DEFAULT.directBuffer(1);
-        buff.writeByte(FILE_LIST);
+        buff.writeByte(Dictionary.FILE_LIST);
         currentChannel.writeAndFlush(buff);
     }
 
     public void getFile(String _fileName){
         try {
-            byte[]  nameByte   = _fileName.getBytes(CHAR_SET);
+            byte[]  nameByte   = _fileName.getBytes(Dictionary.CHAR_SET);
             ByteBuf buff       = ByteBufAllocator.DEFAULT.directBuffer(1 + 4 + nameByte.length);
-            buff.writeByte(GET_FILE);
+            buff.writeByte(Dictionary.GET_FILE);
             buff.writeInt(nameByte.length);
             buff.writeBytes(nameByte);
             currentChannel.writeAndFlush(buff);

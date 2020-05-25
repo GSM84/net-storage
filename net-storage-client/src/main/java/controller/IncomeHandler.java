@@ -18,34 +18,66 @@ public class IncomeHandler extends ChannelInboundHandlerAdapter {
         while (buf.readableBytes() > 0) {
             if (currentState == ReaderState.IDLE) {
                 byte readed = buf.readByte();
-                if (readed == Network.FILE_LIST) {
+                if (readed == Dictionary.FILE_LIST) {
                     currentState       = ReaderState.PROCESS_FILE_LIST;
                     receivedFileLength = ZERO_LENGTH;
 
                     System.out.println("STATE: Start file list processing");
+                } else if (readed == Dictionary.GET_FILE) {
+                    System.out.println("Porcess income file");
+                    currentState = ReaderState.PROCESS_INCOME_FILE;
+
                 } else {
                     System.out.println("ERROR: Invalid first byte - " + readed);
                 }
             } else if (currentState == ReaderState.PROCESS_FILE_LIST) {
-                if (buf.readableBytes() >= 4){
-                    File.setFileListLength(buf.readInt());
+                if (buf.readableBytes() >= 4 && File.getFileNameLength() == 0){
+                    File.setFileNameLength(buf.readInt());
+
                 }
 
-                if (File.getFileListLength() > 0){
+                if (File.getFileNameLength() > 0){
                     while (buf.readableBytes() > 0) {
                         File.collectFileList(receivedFileLength, buf.readByte());
                         receivedFileLength++;
-                        if (File.getFileListLength() == receivedFileLength) {
+                        if (File.getFileNameLength() == receivedFileLength) {
                             currentState = ReaderState.IDLE;
-                            System.out.println("File received return name");
                             File.getInstance().converFIleList();
+                            receivedFileLength = 0;
                             break;
                         }
                     }
                 }
+            } else if (currentState == ReaderState.PROCESS_INCOME_FILE){
+                if (buf.readableBytes() >= 4 && File.getFileNameLength() == 0) {
+                    File.setFileNameLength(buf.readInt());
 
+                } else if (File.getFileNameLength() > 0 && File.getFileName() == null) {
+                    if(buf.readableBytes() >= File.getFileNameLength()) {
+                        byte[] fileNameByte = new byte[File.getFileNameLength()];
+                        buf.readBytes(fileNameByte);
+                        File.setFileName(new String(fileNameByte, Dictionary.CHAR_SET));
+                    }
+
+                } else if (buf.readableBytes() > 0 && File.getFileName() != null && File.getFileLength() == 0) {
+                    if (buf.readableBytes() >= 8) {
+                        File.setFileLength(buf.readLong());
+                    }
+
+                } else if (buf.readableBytes() > 0 && File.getFileLength() > 0){
+                    while (buf.readableBytes() > 0) {
+                        File.processFileBody(buf.readByte());
+                        receivedFileLength++;
+                        if (File.getFileLength() == receivedFileLength) {
+                            currentState = ReaderState.IDLE;
+                            receivedFileLength = 0;
+                            File.finalizeFile();
+                            File.loadFileList(File.getController().getClientFiles());
+                            break;
+                        }
+                    }
+                }
             }
-            //System.out.println((char)buf.readByte());
         }
 
         if (buf.readableBytes() == 0) {

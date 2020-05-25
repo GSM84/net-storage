@@ -20,7 +20,7 @@ public class MainSrv {
                     .childHandler(new ChannelInitializer<SocketChannel>() { // (4)
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast(new OutgoingHandler(), new AuthHandler(), new IncomeHandler());
+                            ch.pipeline().addLast(/*new OutgoingHandler(),*/ new AuthHandler());
                         }
                     });
             // .childOption(ChannelOption.SO_KEEPALIVE, true);

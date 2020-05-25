@@ -6,9 +6,10 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="net-storage-client" />
-        <module name="net-storage-server" />
         <module name="net-storage-common" />
+        <module name="net-storage-server" />
+        <module name="net-storage-srv" />
+        <module name="net-storage-client" />
       </profile>
     </annotationProcessing>
   </component>
