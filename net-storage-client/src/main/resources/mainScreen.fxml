@@ -5,7 +5,7 @@
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
 
-<GridPane gridLinesVisible="true" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.Controller">
+<GridPane gridLinesVisible="true" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="clienServices.ClientController">
   <columnConstraints>
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
     <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -27,13 +27,14 @@
             <Label text="Password" />
             <PasswordField  fx:id="passField" />
             <Separator prefWidth="200.0"/>
-              <Button fx:id="sendCredential" maxWidth="Infinity" mnemonicParsing="false" onAction="#authUser" prefHeight="35.0" prefWidth="299.0" text="Sing In" />
+              <Button fx:id="singIn" maxWidth="Infinity" mnemonicParsing="false" onAction="#singInUser" prefHeight="35.0" prefWidth="299.0" text="Sing In" />
+              <Button fx:id="singUp" maxWidth="Infinity" mnemonicParsing="false" onAction="#singUpUser" prefHeight="35.0" prefWidth="299.0" text="Sing Up" />
           </children>
        </VBox>
       <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" fx:id="serverBox" disable="true">
          <children>
             <ListView fx:id="serverFiles" prefHeight="365.0" prefWidth="300.0" />
-            <Button maxWidth="Infinity" mnemonicParsing="false" prefHeight="35.0" prefWidth="299.0" text="Download file" onAction="#getFile" />
+            <Button maxWidth="Infinity" mnemonicParsing="false" prefHeight="35.0" prefWidth="299.0" text="Download file" onAction="#getFileFromServer" />
          </children>
       </VBox>
    </children>

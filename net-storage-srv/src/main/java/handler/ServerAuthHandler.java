@@ -1,16 +1,17 @@
 package handler;
 
+import dictionaryes.Dictionary;
+import dictionaryes.HandelerState;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import services.AuthService;
 
-public class AuthHandler extends ChannelInboundHandlerAdapter {
-    private HandelerState       currentState      = HandelerState.WAITING_FOR_AUTH;
-    private int                 credentialLength;
-    private String              userLogin;
-    private String              userPass;
-    private AuthService         authService       = new AuthService();
+public class ServerAuthHandler extends ChannelInboundHandlerAdapter {
+    private HandelerState currentState      = HandelerState.WAITING_FOR_AUTH;
+    private int           credentialLength;
+    private AuthService   authService       = new AuthService();
+    private boolean       isNewUser         = false;
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -18,19 +19,21 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
 
         while (buf.readableBytes() > 0) {
             if (currentState == HandelerState.WAITING_FOR_AUTH){
-                byte readed = buf.readByte();
-                if (readed == Dictionary.AUTH) {
-                    System.out.println("STATE: Start processing authorization");
+                byte controlByte = buf.readByte();
+                if (controlByte == Dictionary.AUTH) {
                     currentState = HandelerState.GET_CREDENTIAL_LENGTH;
+
+                } else if (controlByte == Dictionary.AUTH_REG_NEW_USER) {
+                    isNewUser = true;
+                    currentState = HandelerState.GET_CREDENTIAL_LENGTH;
+
                 } else {
-                    System.out.println("ERROR: Invalid first byte - " + readed);
+                    System.out.println("ERROR: Invalid first byte - " + controlByte);
                 }
             } else if (currentState == HandelerState.GET_CREDENTIAL_LENGTH){
                 if (buf.readableBytes() >= Dictionary.INT_LENGTH) {
-                    System.out.println("STATE: Get credential length");
-
                     credentialLength = buf.readInt();
-                    if (userLogin == null){
+                    if (authService.getLogin() == null){
                         currentState = HandelerState.GET_LOGIN;
                     } else {
                         currentState = HandelerState.GET_PASS;
@@ -38,32 +41,36 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
                 }
             } else if (currentState == HandelerState.GET_LOGIN || currentState == HandelerState.GET_PASS){
                 if (buf.readableBytes() >= credentialLength) {
-                    System.out.println("STATE: get login/password");
-
                     byte[] credentialByte = new byte[credentialLength];
                     buf.readBytes(credentialByte);
 
-                    if (userLogin == null){
-                        userLogin = new String(credentialByte, Dictionary.CHAR_SET);
-                        System.out.println("STATE: Login recived - " + userLogin);
+                    if (authService.getLogin() == null){
+                        authService.setLogin(new String(credentialByte, Dictionary.CHAR_SET));
                         currentState = HandelerState.GET_CREDENTIAL_LENGTH;
-                    } else {
-                        System.out.println("STATE: Password received.");
-                        userPass  = new String(credentialByte, Dictionary.CHAR_SET);
 
-                        if (authService.authorize(userLogin, userPass)){
-                            // добавить блок обработки запросов
-                            System.out.println("STATE: Authorized.");
+                    } else {
+                        authService.setPassword(new String(credentialByte, Dictionary.CHAR_SET));
+
+                        if (!isNewUser && authService.authorizeClient()) {
+                            ctx.pipeline().addLast(new ServerIncomeHandler(authService.getUserId()));
+                            authService.sendResponseToClient(Dictionary.SUCCESSEFUL_AUTH, ctx);
                             currentState = HandelerState.AUHORIZED;
-                            ctx.pipeline().addLast(new IncomeHandler(authService.getUserId()));
+
+                        } else if (isNewUser && authService.registerNewUser()){
+                            ctx.pipeline().addLast(new ServerIncomeHandler(authService.getUserId()));
+                            authService.sendResponseToClient(Dictionary.SUCCESSEFUL_AUTH, ctx);
+                            currentState = HandelerState.AUHORIZED;
+
                         } else {
-                            System.err.println("Incorrect password for user - " + userLogin);
+                            authService.sendResponseToClient(Dictionary.FAILED_AUTH, ctx);
+                            authService.clearCredentials();
                             currentState = HandelerState.WAITING_FOR_AUTH;
+
                         }
                     }
                 }
+
             } else if (currentState == HandelerState.AUHORIZED) {
-                // fire message to next handler
                 ctx.fireChannelRead(msg);
             }
         }
@@ -75,7 +82,6 @@ public class AuthHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        System.out.println(String.format("Client %s has closed connection.", userLogin));
         ctx.close();
     }
 
