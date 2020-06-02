@@ -59,6 +59,7 @@ public class ClientFileService {
     }
 
     public void converFileList(ListView _serverFileList){
+        // тут ошибка с потоками
         _serverFileList.getItems().clear();
 
         Arrays.stream(new String(fileListByte)
