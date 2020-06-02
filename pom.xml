@@ -9,9 +9,9 @@
     <packaging>pom</packaging>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>net-storage-server</module>
         <module>net-storage-client</module>
         <module>net-storage-common</module>
+        <module>net-storage-srv</module>
     </modules>
 
     <properties>
